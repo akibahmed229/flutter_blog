@@ -1,16 +1,28 @@
+import 'package:blog_app/core/common/entities/user_entities.dart';
 import 'package:blog_app/core/error/failure.dart';
 import 'package:blog_app/core/usecase/usecase.dart';
-import 'package:blog_app/features/auth/domain/entities/user_entities.dart';
 import 'package:blog_app/features/auth/domain/repository/auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
-// This class implements the Usecase interface for signing up a user.
+/*
+   Use case class for signing up a new user.
+
+     - Responsible for coordinating sign-up business logic.
+     - Uses the [AuthRepository] interface to handle data operations.
+     - Returns a [UserEntities] on success or a [Failure] on error.
+*/
 class UserSignUp implements Usecase<UserEntities, UserSignUpParams> {
   final AuthRepository authRepository;
+
   const UserSignUp({required this.authRepository});
 
+  /*
+     Executes the sign-up process.
+  
+     Calls the repository's sign-up method passing the user's name, email, and password.
+     Returns an Either type with [Failure] or authenticated [UserEntities].
+  */
   @override
-  // This method is responsible for signing up a user with email and password.
   Future<Either<Failure, UserEntities>> call(UserSignUpParams params) async {
     return await authRepository.signUpWithEmailPassword(
       name: params.name,
@@ -20,6 +32,8 @@ class UserSignUp implements Usecase<UserEntities, UserSignUpParams> {
   }
 }
 
+/// Parameters needed to sign up a user.
+/// Holds the user’s name, email, and password to keep method signatures clean and clear.
 class UserSignUpParams {
   final String name;
   final String email;
