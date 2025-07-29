@@ -1,15 +1,16 @@
 import 'package:blog_app/core/error/execptions.dart';
+import 'package:blog_app/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // This interface defines the methods that the AuthRemoteDataSource should implement.
 abstract interface class AuthRemoteDataSource {
-  Future<String> signUpWithEmailPassword({
+  Future<UserModel> signUpWithEmailPassword({
     required String name,
     required String email,
     required String password,
   });
 
-  Future<String> logInWithEmailPassword({
+  Future<UserModel> logInWithEmailPassword({
     required String email,
     required String password,
   });
@@ -20,8 +21,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final SupabaseClient supabaseClient;
   AuthRemoteDataSourceImpl({required this.supabaseClient});
 
+  // This method is responsible for signing up a user with email and password.
   @override
-  Future<String> signUpWithEmailPassword({
+  Future<UserModel> signUpWithEmailPassword({
     required String name,
     required String email,
     required String password,
@@ -38,19 +40,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw ServerException("User is null");
       }
 
-      return response.user!.id;
+      return UserModel.formJson(response.user!.toJson());
     } catch (e) {
       // Handle any exceptions that may occur during the sign-up process
       throw ServerException('Sign up failed: $e');
     }
   }
 
+  // This method is responsible for logging in a user with email and password.
   @override
-  Future<String> logInWithEmailPassword({
+  Future<UserModel> logInWithEmailPassword({
     required String email,
     required String password,
-  }) {
-    // TODO: implement logInWithEmailPassword
-    throw UnimplementedError();
+  }) async {
+    try {
+      final response = await supabaseClient.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      // Handle the case where the user is not logged in successfully
+      if (response.user == null) {
+        throw ServerException("User is null");
+      }
+
+      return UserModel.formJson(response.user!.toJson());
+    } catch (e) {
+      // Handle any exceptions that may occur during the login process
+      throw ServerException('Login failed: $e');
+    }
   }
 }
