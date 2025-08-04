@@ -1,10 +1,11 @@
 import 'package:blog_app/core/common/entities/user_entities.dart';
 import 'package:blog_app/core/error/execptions.dart';
 import 'package:blog_app/core/error/failure.dart';
+import 'package:blog_app/core/network/connection_checker.dart';
 import 'package:blog_app/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:blog_app/features/auth/data/models/user_model.dart';
 import 'package:blog_app/features/auth/domain/repository/auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /*
    Implements the AuthRepository interface.
@@ -14,8 +15,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 */
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
+  final ConnectionChecker connectionChecker;
 
-  AuthRepositoryImpl({required this.remoteDataSource});
+  AuthRepositoryImpl({
+    required this.remoteDataSource,
+    required this.connectionChecker,
+  });
 
   /// Signs up a new user by delegating to the remote data source.
   /// Wraps the result into an Either type for success or failure.
@@ -58,6 +63,24 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntities>> currentUser() async {
     try {
+      // check if internet connection is present
+      if (!await connectionChecker.isConnected) {
+        final session = remoteDataSource.currentUserSession;
+
+        if (session == null) {
+          return left(Failure(message: "User is not logged in"));
+        }
+
+        // if session exist
+        return right(
+          UserModel(
+            id: session.user.id,
+            name: "",
+            email: session.user.email ?? "",
+          ),
+        );
+      }
+
       final userData = await remoteDataSource.getCurrentUserData();
 
       if (userData == null) {
@@ -81,10 +104,13 @@ class AuthRepositoryImpl implements AuthRepository {
     Future<UserEntities> Function() fn,
   ) async {
     try {
+      // check if internet connection is present
+      if (!await connectionChecker.isConnected) {
+        return left(Failure(message: "No Internet Connection!"));
+      }
+
       final user = await fn();
       return right(user);
-    } on AuthException catch (e) {
-      return left(Failure(message: e.message));
     } on ServerException catch (e) {
       return left(Failure(message: e.message));
     }

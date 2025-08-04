@@ -14,7 +14,7 @@
         android_sdk.accept_license = true;
       };
     };
-    buildToolsVersion = "34.0.0";
+    buildToolsVersion = "35.0.0";
     androidComposition = pkgs.androidenv.composeAndroidPackages {
       buildToolsVersions = [
         buildToolsVersion
@@ -24,6 +24,9 @@
         "34"
         "35"
       ];
+      # Add NDK and CMake
+      ndkVersions = ["27.0.12077973"];
+      cmakeVersions = ["3.22.1"];
       abiVersions = ["armeabi-v7a" "arm64-v8a"];
       extraLicenses = [
         "android-googletv-license"

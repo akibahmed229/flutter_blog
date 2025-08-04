@@ -69,8 +69,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       return UserModel.formJson(response.user!.toJson());
+    } on AuthException catch (e) {
+      throw ServerException('Sign up failed: ${e.message}');
     } catch (e) {
-      throw ServerException('Sign up failed: $e');
+      throw ServerException(e.toString());
     }
   }
 
@@ -97,6 +99,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       return UserModel.formJson(response.user!.toJson());
+    } on AuthException catch (e) {
+      throw ServerException('Sign in failed: ${e.message}');
     } catch (e) {
       throw ServerException('Login failed: $e');
     }
